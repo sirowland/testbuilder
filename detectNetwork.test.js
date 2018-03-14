@@ -7,148 +7,123 @@
 // other places in this file where you'll replace the FILL_ME_IN with a
 // different value.
 var FILL_ME_IN = 'Fill this value in';
- 
-describe('Introduction to Mocha Tests - READ ME FIRST', function() {
-  // A Mocha test is just a function!
-  // If the function throws an error when run, it fails.
-  // If it doesn't throw an error when run, it doesn't fail. 
-  // To read more about mocha, visit mochajs.org
 
-  // Once you've read and understood this section, please comment it out. 
-  // You will not be able to proceed with a failing test. 
+var cardNetworkObject = {
+  'Diner\'s Club': {
+    prefixes: ['38','39'],
+    lengths: [14]
+  },
+  'American Express': {
+    prefixes: ['34','37'],
+    lengths: [15]
+  },
+  'Visa': {
+    prefixes: ['4'],
+    lengths: [13, 16, 19]
+  },
+  'Discover': {
+    prefixes: ['6011','65'].concat(range(644, 649)),
+    lengths: [16, 19]
+  },
+  'MasterCard': {
+    prefixes: range(51, 56),
+    lengths: [16]
+  },
+  'Maestro': {
+    prefixes: ['5018','5020','5038','6304'],
+    lengths: [12, 13, 14, 15, 16, 17, 18, 19]
+  },
+  'China UnionPay': {
+    prefixes: range(624, 626).concat(range(6282, 6288)).concat(range(622126, 622925)),
+    lengths: [16, 17, 18, 19]
+  },
+  'Switch': {
+    prefixes: ['4903','4905','4911','4936','564182','633110','6333','6759'],
+    lengths: [16, 18, 19] 
+  }
+};
 
-  it('Throws an error so it fails', function() {
-    throw new Error('Delete me!');
+//I: low and high of prefix range
+//O: return array of prefixes
+function range(low, high) {
+  return Array(high - low + 1).fill()
+                              .map((_, i) => low + i)
+                              .map(a => a.toString());
+}
+
+//I: prefix length and name
+//O: string credit card number with prefix and length
+function generateCreditCard(prefix, length, name) {
+  var cardNumber = prefix;
+  for (var i = 0; i < length - prefix.length; i++) {
+    cardNumber += Math.floor(Math.random() * 10);
+  }
+
+  //deal with visa switch cross over
+  if (name === 'Visa' && (cardNumber.substring(0,4) === '4903' 
+                          || cardNumber.substring(0,4) === '4905' 
+                          || cardNumber.substring(0,4) === '4911' 
+                          || cardNumber.substring(0,4) === '4936')) {
+    //call again if visa and generated a switch number
+    return generateCreditCard(prefix, length, name);
+  } else {
+    return cardNumber;
+  }
+}
+
+//I: prefix, length and name
+//O: undefined (it runs the test)
+function generateTest(prefix, length, name) {
+  var should = chai.should();
+
+  it('has a prefix ' + prefix + ' and a length of ' + length, function () {
+    detectNetwork(generateCreditCard(prefix, length, name)).should.equal(name);
   });
+}
 
-  it('Doesn\'t throw an error, so it doesn\'t fail', function() {
-    // This test doesn't really test anything at all! It will pass no matter what.
-    var even = function(num){
-      return num/2 === 0;
-    }
-    return even(10) === true;
-  });
+//I: Name of a Card Network
+//O: run all of the tests for that Card Network
+function createAllCardNetworkTests(name) {
+  var prefixes = cardNetworkObject[name].prefixes;
+  var lengths = cardNetworkObject[name].lengths;
 
-  // In tests, we want to compare the expected behavior to the actual behavior.
-  // A test should only fail if the expected behavior doesn't match the actual.
-  it('Throws an error when expected behavior does not match actual behavior', function() {
-    var even = function(num){
-      return num/2 === 0;
+  for (var i = 0; i < prefixes.length; i++) {
+    for (var j = 0; j < lengths.length; j++) {
+      generateTest(prefixes[i], lengths[j], name);
     }
+  }
+}
 
-    if(even(10) !== true) {
-      throw new Error('10 should be even!');
-    }
-  });
-});
+//Run all the tests using Mocha
+
 describe('Diner\'s Club', function() {
-  // Be careful, tests can have bugs too...
-
-  it('has a prefix of 38 and a length of 14', function() {
-    throw new Error('Delete me!');
- 
-    if (detectNetwork('38345678901234') !== 'Diner\'s Club') {
-      throw new Error('Test failed');
-    }
-  });
-
-  it('has a prefix of 39 and a length of 14', function() {
-    if (detectNetwork('3934567890123') !== 'Diner\'s Club') {
-      throw new Error('Test failed');
-    }
- 
-  });
+  createAllCardNetworkTests('Diner\'s Club');
 });
 
 describe('American Express', function() {
-  // It can get annoying to keep typing the if/throw, so here is a
-  // helper function to throw an error if the input statement isn't true. 
-  var assert = function(isTrue) {
-    if(isTrue) {
-      throw new Error('Test failed');
-    }
- 
-  };
-
-  it('has a prefix of 34 and a length of 15', function() {
-    assert(detectNetwork('343456789012345') === 'American Express');
-  });
-
-  it('has a prefix of 37 and a length of 15', function() {
-    assert(detectNetwork('373456789012345') === 'American Express');
-  });
+  createAllCardNetworkTests('American Express');
 });
 
 describe('Visa', function() {
-  // Chai is an entire library of helper functions for tests!
-  // Chai provides an assert that acts the same as our previous assert.
-  // Search the documentation to figure out how to access it. 
-  //   http://chaijs.com/
-  var assert = chai.FILL_ME_IN;
- 
-
-  it('has a prefix of 4 and a length of 13', function() {
-    assert(detectNetwork('4123456789012') === 'Visa');
-  });
-
-  it('has a prefix of 4 and a length of 16', function() {
-    assert(detectNetwork('4123456789012345') === 'Visa');
-  });
-
-  it('has a prefix of 4 and a length of 19', function() {
-    assert(detectNetwork('4123456789012345678') === 'Visa');
-  });
+  createAllCardNetworkTests('Visa')
 });
 
 describe('MasterCard', function() {
-  // Chai lets you write more human-readable tests that throw helpful errors.
-  // Expect syntax is one way to do this, but there are others. 
-  // If you want to know more, check out the documentation. 
-  //   http://chaijs.com/api/bdd/
-  var expect = chai.expect;
- 
-  it(FILL_ME_IN, function() {
-    expect(detectNetwork('5112345678901234')).to.equal('MasterCard');
-  });
- 
-  it(FILL_ME_IN, function() {
-    expect(detectNetwork('5212345678901234')).to.equal('MasterCard');
-  });
- 
-  it(FILL_ME_IN, function() {
-    expect(detectNetwork('5312345678901234')).to.equal('MasterCard');
-  });
- 
-
-  // You can also use should instead of expect, which changes the style
-  // slightly. It really doesn't matter which one you use - check out 
-  // http://chaijs.com/guide/styles/ for more info, but it's important
-  // to be consistent (unlike in this file, where we use BOTH expect
-  // and should, but that's just for learning), so once you've gotten 
-  // these tests to pass using should syntax, refactor your tests to 
-  // use either expect or should, but not both. 
-  var should = chai.should();
-  
-  it('has a prefix of 54 and a length of 16', function() {
-    detectNetwork('5412345678901234').should.equal(FILL_ME_IN);
-  });
- 
-  it('has a prefix of 55 and a length of 16', function() {
-    detectNetwork('5512345678901234').should.equal(FILL_ME_IN);
-  })
- 
+  createAllCardNetworkTests('MasterCard'); 
 });
 
 describe('Discover', function() {
-  // Tests without a function will be marked as "pending" and not run
-  // Implement these tests (and others) and make them pass!
-  it('has a prefix of 6011 and a length of 16');
-  it('has a prefix of 6011 and a length of 19');
+  createAllCardNetworkTests('Discover');
 });
 
 describe('Maestro', function() {
-  // Write full test coverage for the Maestro card
+  createAllCardNetworkTests('Maestro');
 });
 
-describe('should support China UnionPay')
-describe('should support Switch')
+describe('China UnionPay', function() {
+  createAllCardNetworkTests('China UnionPay');
+});
+
+describe('Switch', function() {
+  createAllCardNetworkTests('Switch');
+});
